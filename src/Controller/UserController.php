@@ -98,12 +98,34 @@ class UserController extends AbstractController
                 // Cifrar la contraseña
                 $pwd = hash('sha256', $password);
                 $user->setPassword($pwd);
-                var_dump($user);die();
-                $data = $user;
 
                 // Comprobar si el usuario ya existe (duplicados)
+                $doctrine = $this->getDoctrine();
+                $entityManager = $doctrine->getManager();
 
-                // Si no existe, guardarlo en la base de datos
+                $user_repo = $doctrine->getRepository(User::class);
+                $isset_user = $user_repo->findBy(array(
+                    'email' => $email
+                ));
+
+                if (count($isset_user) == 0) {
+                    // Si no existe, guardarlo en la base de datos
+                    $entityManager->persist($user);     // Sólo lo guarda en el ORM
+                    $entityManager->flush();            // Ya sí lo guarda en la Base de datos
+
+                    $data = [
+                        'status' => 'success',
+                        'code' => 200,
+                        'message' => 'El usuario se ha creado correctamente',
+                        'user' => $user,
+                    ];
+                } else {
+                    $data = [
+                        'status' => 'error',
+                        'code' => 400,
+                        'message' => 'El usuario ya existe',
+                    ];
+                }
             }
         }
 
