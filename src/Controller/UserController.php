@@ -6,6 +6,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Constraints\Email;
 use App\Entity\User;
 use App\Entity\video;
 
@@ -68,12 +70,36 @@ class UserController extends AbstractController
         // Respuesta por defecto
         $data = [
             'status' => 'error',
-            'code' => 200,
+            'code' => 400,
             'message' => 'El usuario no se ha creado',
-            'json' => $params,
         ];
 
         // Comprobar y validar los datos
+        if ($json != null) {
+            $name = !empty($params->name) ? $params->name : null;
+            $surname = !empty($params->surname) ? $params->surname : null;
+            $email = !empty($params->email) ? $params->email : null;
+            $password = !empty($params->password) ? $params->password : null;
+
+            $validator = Validation::createValidator();
+            $validate_email = $validator->validate($email, [
+                new Email()
+            ]);
+
+            if (!empty($email) && count($validate_email) == 0 && !empty($password) && !empty($name) && !empty($surname)) {
+                $data = [
+                    'status' => 'success',
+                    'code' => 200,
+                    'message' => 'Validación correcta',
+                ];
+            } else {
+                $data = [
+                    'status' => 'success',
+                    'code' => 400,
+                    'message' => 'Validación incorrecta',
+                ];
+            }
+        }
 
         // Si la validación es correcta, crear el objeto del usuario
 
