@@ -36,7 +36,7 @@ class UserController extends AbstractController
         $users = $user_repo->findAll();
         $user = $user_repo->find(1);
         $videos = $video_repo->findAll();
-        
+
         $data = [
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/UserController.php',
@@ -55,5 +55,31 @@ class UserController extends AbstractController
         //var_dump($user);
         //die();
         return $this->resjson($videos);
+    }
+
+    public function create(Request $request) {
+        // Recoger los datos del post
+
+        // Decodificar el json
+
+        // Respuesta por defecto
+        $data = [
+            'status' => 'error',
+            'code' => 200,
+            'message' => 'El usuario no se ha creado',
+        ];
+
+        // Comprobar y validar los datos
+
+        // Si la validación es correcta, crear el objeto del usuario
+
+        // Cifrar la contraseña
+
+        // Comprobar si el usuario ya existe (duplicados)
+
+        // Si no existe, guardarlo en la base de datos
+
+        // Devolver respuesta en json
+        return $this->resjson($data);
     }
 }
