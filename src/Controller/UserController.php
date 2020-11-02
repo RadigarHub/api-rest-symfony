@@ -184,32 +184,42 @@ class UserController extends AbstractController
         // Comprobar si el token es correcto
         $authCheck = $jwt_auth->checkToken($token);
 
-        // Si es correcto hacer la actualización del usuario
-        if ($authCheck) {
-            // Conseguir el entity manager
-
-            // Conseguir los datos del usuario identificado
-
-            // Conseguir el usuario a actualizar completo
-
-            // Recoger los datos por post
-
-            // Comprobar y validar los datos
-
-            // Asignar nuevos datos al objeto usuario
-
-            // Comprobar duplicados
-
-            // Guardar los cambios en la base de datos
-        }
-
+        // Respuesta por defecto
         $data = [
             'status' => 'error',
-            'message' => 'Método update del controlador usuario',
-            'token' => $token,
-            'authCheck' => $authCheck,
+            'code' => 400,
+            'message' => 'Los datos del usuario no se han podido actualizar',
         ];
 
+        // Si el token es correcto hacer la actualización del usuario
+        if ($authCheck) {
+            // Conseguir el entity manager
+            $entityManager = $this->getDoctrine()->getManager();
+
+            // Conseguir los datos del usuario identificado
+            $identity = $jwt_auth->checkToken($token, true);
+
+            // Conseguir el usuario a actualizar completo
+            $user_repo = $this->getDoctrine()->getRepository(User::class);
+            $user = $user_repo->findOneBy([
+                'id' => $identity->sub
+            ]);
+
+            // Recoger los datos por post
+            $json = $request->get('json', null);
+            $params = json_decode($json);
+
+            // Comprobar y validar los datos
+            if (!empty($json)) {
+                // Asignar nuevos datos al objeto usuario
+    
+                // Comprobar duplicados
+    
+                // Guardar los cambios en la base de datos
+
+            }
+        }
+        
         return $this->resjson($data);
     }
 }
