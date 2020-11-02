@@ -188,7 +188,7 @@ class UserController extends AbstractController
         $data = [
             'status' => 'error',
             'code' => 400,
-            'message' => 'Los datos del usuario no se han podido actualizar',
+            'message' => 'Los datos del usuario NO se han podido actualizar',
         ];
 
         // Si el token es correcto hacer la actualización del usuario
@@ -211,15 +211,48 @@ class UserController extends AbstractController
 
             // Comprobar y validar los datos
             if (!empty($json)) {
-                // Asignar nuevos datos al objeto usuario
-    
-                // Comprobar duplicados
-    
-                // Guardar los cambios en la base de datos
+                $name = !empty($params->name) ? $params->name : null;
+                $surname = !empty($params->surname) ? $params->surname : null;
+                $email = !empty($params->email) ? $params->email : null;
 
+                $validator = Validation::createValidator();
+                $validate_email = $validator->validate($email, [
+                    new Email()
+                ]);
+
+                if (!empty($email) && count($validate_email) == 0 && !empty($name) && !empty($surname)) {
+                    // Asignar nuevos datos al objeto usuario
+                    $user->setName($name);
+                    $user->setSurname($surname);
+                    $user->setEmail($email);
+        
+                    // Comprobar duplicados
+                    $isset_user = $user_repo->findBy([
+                        'email' => $email
+                    ]);
+
+                    if (count($isset_user) == 0 || $identity->email == $email) {
+                        // Guardar los cambios en la base de datos
+                        $entityManager->persist($user);
+                        $entityManager->flush();
+
+                        $data = [
+                            'status' => 'success',
+                            'code' => 200,
+                            'message' => 'Los datos del usuario se han actualizado correctamente',
+                            'user' => $user,
+                        ];
+                    } else {
+                        $data = [
+                            'status' => 'error',
+                            'code' => 400,
+                            'message' => 'No se puede actualizar el email ya que está asignado a otro usuario',
+                        ];
+                    }
+                }
             }
         }
-        
+
         return $this->resjson($data);
     }
 }
