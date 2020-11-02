@@ -132,4 +132,50 @@ class UserController extends AbstractController
         // Devolver respuesta en json
         return new JsonResponse($data);
     }
+
+    public function login(Request $request) {
+        // Recibir los datos por post
+        $json = $request->get('json', null);
+
+        // Decodificar el json
+        $params = json_decode($json);
+
+        // Respuesta por defecto
+        $data = [
+            'status' => 'error',
+            'code' => 400,
+            'message' => 'El usuario no se ha podido identificar',
+        ];
+
+        // Comprobar y validar los datos
+        if ($json != null) {
+            $email = !empty($params->email) ? $params->email : null;
+            $password = !empty($params->password) ? $params->password : null;
+            $gettoken = !empty($params->gettoken) ? $params->gettoken : null;
+            
+            $validator = Validation::createValidator();
+            $validate_email = $validator->validate($email, [
+                new Email()
+            ]);
+
+            if (!empty($email) && !empty($password) && count($validate_email) == 0) {
+                // Cifrar la contraseña
+                $pwd = hash('sha256', $password);
+        
+                // Si todo es válido, llamaremos a un servicio para identificar al usuario (jwt, token o un objeto)
+
+                // Crear servicio de jwt
+                $data = [
+                    'message' => 'Validación correcta'
+                ];
+            } else {
+                $data = [
+                    'message' => 'Validación incorrecta'
+                ];
+            }
+        }
+
+        // Devolver respuesta en formato json
+        return $this->json($data);
+    }
 }
