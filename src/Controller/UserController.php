@@ -176,4 +176,21 @@ class UserController extends AbstractController
         // Devolver respuesta en formato json
         return $this->json($data);
     }
+
+    public function edit(Request $request) {
+        // Recoger la cabecera de autenticación
+
+        // Crear un método para comprobar si el token es correcto
+
+        // Si es correcto hacer la actualización del usuario
+
+        // ...
+
+        $data = [
+            'status' => 'error',
+            'message' => 'Método update del controlador usuario',
+        ];
+
+        return $this->resjson($data);
+    }
 }
