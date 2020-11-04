@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints\Email;
+use Knp\Component\Pager\PaginatorInterface;
 use App\Entity\User;
 use App\Entity\video;
 use App\Services\JwtAuth;
@@ -108,7 +109,7 @@ class VideoController extends AbstractController
         return $this->resjson($data);
     }
 
-    public function videos(Request $request, JwtAuth $jwt_auth) {
+    public function videos(Request $request, JwtAuth $jwt_auth, PaginatorInterface $paginator) {
         // Respuesta por defecto
         $data = [
             'status' => 'error',
@@ -117,20 +118,44 @@ class VideoController extends AbstractController
         ];
 
         // Recoger la cabecera de autenticación
+        $token = $request->headers->get('Authorization');
 
         // Comprobar si es correcta
+        $authCheck = $jwt_auth->checkToken($token);
 
-        // Conseguir la identidad del usuario
+        if ($authCheck) {
+            // Conseguir la identidad del usuario
+            $identity = $jwt_auth->checkToken($token, true);
 
-        // Configurar el bundle de paginación
+            $entityManager = $this->getDoctrine()->getManager();
+            
+            // Configurar el bundle de paginación
+            // Hecho en el fichero services.yaml
 
-        // Hacer una consulta para paginar
-
-        // Recoger el parámetro page de la url
-
-        // Invocar paginación
-
-        // Preparar array de datos para devolver
+            // Hacer una consulta para paginar
+            $dql = "SELECT v FROM App\Entity\Video v WHERE v.user = {$identity->sub} ORDER BY v.id DESC";
+            $query = $entityManager->createQuery($dql);
+            
+            // Recoger el parámetro page de la url
+            $page = $request->query->getInt('page', 1);
+            $items_per_page = 5;
+    
+            // Invocar paginación
+            $pagination = $paginator->paginate($query, $page, $items_per_page);
+            $total = $pagination->getTotalItemCount();
+    
+            // Preparar array de datos para devolver
+            $data = [
+                'status' => 'success',
+                'code' => 200,
+                'total_items_count' => $total,
+                'page_actual' => $page,
+                'items_per_page' => $items_per_page,
+                'total_pages' => ceil($total / $items_per_page),
+                'videos' => $pagination,
+                'user_id' => $identity->sub
+            ];
+        }
 
         return $this->resjson($data);
     }
