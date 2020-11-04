@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Constraints\Email;
 use App\Entity\User;
 use App\Entity\video;
 use App\Services\JwtAuth;
+use DateTime;
 
 class VideoController extends AbstractController
 {
@@ -41,25 +42,68 @@ class VideoController extends AbstractController
     }
 
     public function create(Request $request, JwtAuth $jwt_auth) {
-        // Recoger el token
-
-        // Comprobar si es correcto
-
-        // Recoger los datos por post
-
-        // Recoger el objeto de usuario identificado
-
-        // Comprobar y validar los datos
-
-        // Guardar el nuevo video favorito en la base de datos
-
-        // Devolver respuesta
-        
+        // Respuesta por defecto
         $data = [
             'status' => 'error',
             'code' => 400,
             'message' => 'El video no ha podido crearse',
         ];
+
+        // Recoger el token
+        $token = $request->headers->get('Authorization', null);
+
+        // Comprobar si es correcto
+        $authCheck = $jwt_auth->checkToken($token);
+
+        if ($authCheck) {
+            // Recoger los datos por post
+            $json = $request->get('json', null);
+            $params = json_decode($json);
+    
+            // Recoger el objeto de usuario identificado
+            $identity = $jwt_auth->checkToken($token, true);
+    
+            // Comprobar y validar los datos
+            if (!empty($json)) {
+                $user_id = ($identity->sub != null) ? $identity->sub : null;
+                $title = (!empty($params->title)) ? $params->title : null;
+                $description = (!empty($params->description)) ? $params->description : null;
+                $url = (!empty($params->url)) ? $params->url : null;
+
+                if (!empty($user_id) && !empty($title) && !empty($url)) {
+                    // Guardar el nuevo video favorito en la base de datos
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $user = $this->getDoctrine()->getRepository(User::class)->findOneBy([
+                        'id' => $user_id
+                    ]);
+
+                    // Crear el objeto video
+                    $video = new Video();
+                    $video->setUser($user);
+                    $video->setTitle($title);
+                    $video->setDescription($description);
+                    $video->setUrl($url);
+                    $video->setStatus('Normal');
+
+                    $createdAt = new \DateTime('now');
+                    $updatedAt = new \DateTime('now');
+                    $video->setCreatedAt($createdAt);
+                    $video->setUpdatedAt($updatedAt);
+
+                    // Guardarlo en la base de datos
+                    $entityManager->persist($video);
+                    $entityManager->flush();
+            
+                    // Devolver respuesta
+                    $data = [
+                        'status' => 'success',
+                        'code' => 200,
+                        'message' => 'El video se ha guardado correctamente',
+                        'video' => $video,
+                    ];
+                }
+            }
+        }
 
         return $this->resjson($data);
     }
