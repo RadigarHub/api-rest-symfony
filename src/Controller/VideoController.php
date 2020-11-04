@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints\Email;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Entity\User;
-use App\Entity\video;
+use App\Entity\Video;
 use App\Services\JwtAuth;
 use DateTime;
 
@@ -166,20 +166,33 @@ class VideoController extends AbstractController
             'status' => 'error',
             'code' => 400,
             'message' => 'Vídeo no encontrado',
-            'id' => $id,
         ];
 
         // Sacar el token
+        $token = $request->headers->get('Authorization');
 
         // Comprobar si es correcto
+        $authCheck = $jwt_auth->checkToken($token);
 
-        // Sacar la identidad del usuario
+        if ($authCheck) {
+            // Sacar la identidad del usuario
+            $identity = $jwt_auth->checkToken($token, true);
 
-        // Sacar el objeto del vídeo en base al id de la url
-
-        // Comrpobar si el vídeo existe y es propiedad del usuario identificado
-
-        // Devolver una respuesta
+            // Sacar el objeto del vídeo en base al id de la url
+            $video = $this->getDoctrine()->getRepository(Video::class)->findOneBy([
+                'id' => $id
+            ]);
+    
+            // Comprobar si el vídeo existe y es propiedad del usuario identificado
+            if ($video && is_object($video) && $identity->sub == $video->getUser()->getId()) {
+                // Devolver una respuesta
+                $data = [
+                    'status' => 'success',
+                    'code' => 200,
+                    'vídeo' => $video,
+                ];
+            }
+        }
 
         return $this->resjson($data);
     }

@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints\Email;
 use App\Entity\User;
-use App\Entity\video;
+use App\Entity\Video;
 use App\Services\JwtAuth;
 
 class UserController extends AbstractController
