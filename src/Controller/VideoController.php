@@ -42,12 +42,12 @@ class VideoController extends AbstractController
         ]);
     }
 
-    public function create(Request $request, JwtAuth $jwt_auth) {
+    public function create(Request $request, JwtAuth $jwt_auth, $id = null) {
         // Respuesta por defecto
         $data = [
             'status' => 'error',
             'code' => 400,
-            'message' => 'El video no ha podido crearse',
+            'message' => 'El video no ha podido crearse o actualizarse',
         ];
 
         // Recoger el token
@@ -78,30 +78,64 @@ class VideoController extends AbstractController
                         'id' => $user_id
                     ]);
 
-                    // Crear el objeto video
-                    $video = new Video();
-                    $video->setUser($user);
-                    $video->setTitle($title);
-                    $video->setDescription($description);
-                    $video->setUrl($url);
-                    $video->setStatus('Normal');
+                    // Guardar nuevo vídeo
+                    if ($id == null) {
+                        // Crear el objeto video
+                        $video = new Video();
+                        $video->setUser($user);
+                        $video->setTitle($title);
+                        $video->setDescription($description);
+                        $video->setUrl($url);
+                        $video->setStatus('Normal');
+    
+                        $createdAt = new \DateTime('now');
+                        $updatedAt = new \DateTime('now');
+                        $video->setCreatedAt($createdAt);
+                        $video->setUpdatedAt($updatedAt);
+    
+                        // Guardarlo en la base de datos
+                        $entityManager->persist($video);
+                        $entityManager->flush();
+                
+                        // Devolver respuesta
+                        $data = [
+                            'status' => 'success',
+                            'code' => 200,
+                            'message' => 'El video se ha guardado correctamente',
+                            'video' => $video,
+                        ];
 
-                    $createdAt = new \DateTime('now');
-                    $updatedAt = new \DateTime('now');
-                    $video->setCreatedAt($createdAt);
-                    $video->setUpdatedAt($updatedAt);
+                    // Editar vídeo existente
+                    } else {
+                        // Obtener el vídeo de la base de datos
+                        $video = $this->getDoctrine()->getRepository(Video::class)->findOneBy([
+                            'id' => $id,
+                            'user' => $identity->sub
+                        ]);
 
-                    // Guardarlo en la base de datos
-                    $entityManager->persist($video);
-                    $entityManager->flush();
-            
-                    // Devolver respuesta
-                    $data = [
-                        'status' => 'success',
-                        'code' => 200,
-                        'message' => 'El video se ha guardado correctamente',
-                        'video' => $video,
-                    ];
+                        if ($video && is_object($video)) {
+                            // Modificar los valores del vídeo con los parámetros que recibimos de la petición
+                            $video->setTitle($title);
+                            $video->setDescription($description);
+                            $video->setUrl($url);
+        
+                            $updatedAt = new \DateTime('now');
+                            $video->setUpdatedAt($updatedAt);
+
+                            // Actualizar el video en la base de datos
+                            $entityManager->persist($video);
+                            $entityManager->flush();
+
+                            // Devolver respuesta
+                            $data = [
+                                'status' => 'success',
+                                'code' => 200,
+                                'message' => 'El vídeo se ha actualizado correctamente',
+                                'vídeo' => $video,
+                            ];
+                        }
+                    }
+
                 }
             }
         }
