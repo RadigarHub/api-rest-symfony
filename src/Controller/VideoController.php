@@ -131,7 +131,7 @@ class VideoController extends AbstractController
                                 'status' => 'success',
                                 'code' => 200,
                                 'message' => 'El vídeo se ha actualizado correctamente',
-                                'vídeo' => $video,
+                                'video' => $video,
                             ];
                         }
                     }
@@ -223,7 +223,7 @@ class VideoController extends AbstractController
                 $data = [
                     'status' => 'success',
                     'code' => 200,
-                    'vídeo' => $video,
+                    'video' => $video,
                 ];
             }
         }
@@ -267,7 +267,7 @@ class VideoController extends AbstractController
                 $data = [
                     'status' => 'success',
                     'code' => 200,
-                    'vídeo' => $video,
+                    'video' => $video,
                 ];
             }
         }
